@@ -387,7 +387,10 @@ namespace casioemu
 			OpcodeSource *handler = opcode_dispatch[impl_opcode];
 
 			if (!handler)
-				PANIC("unrecognized instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
+			{
+				fprintf(stderr, "unrecognized instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
+				continue;
+			}
 
 			impl_long_imm = 0;
 			if (handler->hint & H_TI)

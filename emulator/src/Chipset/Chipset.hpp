@@ -47,8 +47,6 @@ namespace casioemu
 		void AcceptInterrupt();
 		void RaiseSoftware(size_t index);
 
-		const size_t mmu_segments[3] = {0, 1, 8};
-
 		void ConstructPeripherals();
 		void DestructPeripherals();
 

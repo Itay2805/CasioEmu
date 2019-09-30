@@ -12,19 +12,14 @@
 
 namespace casioemu
 {
-	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, unsigned int _timer_interval, unsigned int _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second, _timer_interval), chipset(*new Chipset(*this))
+	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, unsigned int _timer_interval, unsigned int _cycles_per_second, bool _paused) :
+		paused(_paused), model_path(_argv_map["model"]), hardware_id (GetHardwareId()),
+		argv_map(_argv_map), cycles(_cycles_per_second, _timer_interval), chipset(*new Chipset(*this))
 	{
 		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
 
 		running = true;
 		timer_interval = _timer_interval;
-		model_path = argv_map["model"];
-
-		lua_state = luaL_newstate();
-		luaL_openlibs(lua_state);
-
-		SetupLuaAPI();
-		LoadModelDefition();
 
 		interface_background = GetModelInfo("rsd_interface");
 		if (interface_background.dest.x != 0 || interface_background.dest.y != 0)

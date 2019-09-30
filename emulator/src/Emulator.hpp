@@ -9,6 +9,7 @@
 #include <mutex>
 #include <thread>
 
+#include "Data/HardwareId.hpp"
 #include "Data/ModelInfo.hpp"
 #include "Data/SpriteInfo.hpp"
 
@@ -43,6 +44,21 @@ namespace casioemu
 		void SetupInternals();
 		void RunStartupScript();
 
+		HardwareId GetHardwareId()
+		{
+			lua_state = luaL_newstate();
+			luaL_openlibs(lua_state);
+
+			SetupLuaAPI();
+			LoadModelDefition();
+
+			int hardware_id = GetModelInfo("hardware_id");
+			if (hardware_id != HW_ES_PLUS && hardware_id != HW_CLASSWIZ)
+				PANIC("Unknown hardware id %d\n", hardware_id);
+			return (HardwareId) hardware_id;
+		}
+
+
 	public:
 		Emulator(std::map<std::string, std::string> &argv_map, unsigned int timer_interval, unsigned int cycles_per_second, bool paused = false);
 		~Emulator();
@@ -50,6 +66,7 @@ namespace casioemu
 		std::recursive_mutex access_mx;
 		lua_State *lua_state;
 		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
+		HardwareId hardware_id;
 		std::map<std::string, std::string> &argv_map;
 
 	private:

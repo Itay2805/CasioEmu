@@ -1,5 +1,6 @@
 #include "Chipset.hpp"
 
+#include "../Data/HardwareId.hpp"
 #include "../Emulator.hpp"
 #include "../Logger.hpp"
 #include "CPU.hpp"
@@ -27,7 +28,8 @@ namespace casioemu
 
 		cpu.SetMemoryModel(CPU::MM_LARGE);
 
-		for (auto &segment_index : mmu_segments)
+
+		for (auto segment_index : emulator.hardware_id == HW_ES_PLUS ? std::initializer_list<int>{0, 1, 8} : std::initializer_list<int>{0, 1, 2, 3, 4, 5})
 			mmu.GenerateSegmentDispatch(segment_index);
 
 		ConstructPeripherals();
@@ -59,7 +61,7 @@ namespace casioemu
 	{
 		peripherals.push_front(new ROMWindow(emulator));
 		peripherals.push_front(new BatteryBackedRAM(emulator));
-		peripherals.push_front(new Screen(emulator));
+		peripherals.push_front(CreateScreen(emulator));
 		peripherals.push_front(new Keyboard(emulator));
 		peripherals.push_front(new StandbyControl(emulator));
 		peripherals.push_front(new Miscellaneous(emulator));

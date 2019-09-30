@@ -4,13 +4,13 @@
 #include "Peripheral.hpp"
 #include "../Chipset/MMURegion.hpp"
 
-#include <vector>
+#include <memory>
 
 namespace casioemu
 {
 	class ROMWindow : public Peripheral
 	{
-		std::vector<MMURegion> regions;
+		std::unique_ptr<MMURegion[]> regions;
 
 	public:
 		using Peripheral::Peripheral;

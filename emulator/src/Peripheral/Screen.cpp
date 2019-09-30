@@ -22,7 +22,7 @@ namespace casioemu
 	template <HardwareId hardware_id>
 	class Screen : public Peripheral
 	{
-		static int const N_ROW,
+		static int const N_ROW, // excluding the 1 row used for status line
 			ROW_SIZE, // bytes
 			OFFSET, // bytes
 			ROW_SIZE_DISP; // bytes used to display
@@ -220,9 +220,9 @@ namespace casioemu
 		ink_colour = emulator.GetModelInfo("ink_colour");
 		require_frame = true;
 
-		screen_buffer = new uint8_t[N_ROW * ROW_SIZE];
+		screen_buffer = new uint8_t[(N_ROW + 1) * ROW_SIZE];
 
-		region_buffer.Setup(0xF800, N_ROW * ROW_SIZE, "Screen/Buffer", this, [](MMURegion *region, size_t offset) {
+		region_buffer.Setup(0xF800, (N_ROW + 1) * ROW_SIZE, "Screen/Buffer", this, [](MMURegion *region, size_t offset) {
 			offset -= region->base;
 			if (offset % ROW_SIZE >= ROW_SIZE_DISP)
 				return (uint8_t)0;

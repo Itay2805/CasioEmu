@@ -10,6 +10,37 @@ namespace casioemu
 {
 	class Emulator;
 
+	struct UniqueBool;
+	void swap(UniqueBool &, UniqueBool &);
+
+	struct UniqueBool
+	{
+		bool value;
+
+		UniqueBool() = default;
+		UniqueBool(bool _value) : value (_value) {}
+		UniqueBool(UniqueBool const &) = delete;
+		UniqueBool(UniqueBool &&other) : value{other.value}
+		{
+			other.value = false;
+		}
+		UniqueBool &operator =(UniqueBool other)
+		{
+			swap(*this, other);
+			return *this;
+		}
+
+		operator bool() const
+		{
+			return value;
+		}
+	};
+
+	inline void swap(UniqueBool &a, UniqueBool &b)
+	{
+		std::swap(a.value, b.value);
+	}
+
 	struct MMURegion
 	{
 		typedef uint8_t (*ReadFunction)(MMURegion *, size_t);
@@ -20,10 +51,14 @@ namespace casioemu
 		void *userdata;
 		ReadFunction read;
 		WriteFunction write;
-		bool setup_done;
+		UniqueBool setup_done;
 		Emulator *emulator;
 
 		MMURegion();
+		MMURegion(const MMURegion &) = delete;
+		MMURegion(MMURegion &&) = default;
+		MMURegion &operator=(const MMURegion &) = delete;
+		MMURegion &operator=(MMURegion &&) = default;
 		~MMURegion();
 		void Setup(size_t base, size_t size, std::string description, void *userdata, ReadFunction read, WriteFunction write, Emulator &emulator);
 		void Kill();

@@ -8,6 +8,10 @@
 #include <map>
 #include <vector>
 
+#ifndef REG_CHECK_READ_WRITE
+#define REG_CHECK_READ_WRITE false
+#endif
+
 namespace casioemu
 {
 	class Emulator;
@@ -21,7 +25,9 @@ namespace casioemu
 		{
 			size_t type_size;
 			std::string name;
+#if REG_CHECK_READ_WRITE
 			bool read, written;
+#endif
 
 			uint16_t raw;
 		};
@@ -37,13 +43,17 @@ namespace casioemu
 
 			operator value_type()
 			{
+#if REG_CHECK_READ_WRITE
 				read = true;
+#endif
 				return raw;
 			}
 
 			Register<value_type> &operator =(value_type value)
 			{
+#if REG_CHECK_READ_WRITE
 				written = true;
+#endif
 				raw = value;
 				return *this;
 			}

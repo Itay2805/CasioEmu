@@ -381,11 +381,13 @@ namespace casioemu
 		 */
 		reg_dsr	= 0;
 
+#if REG_CHECK_READ_WRITE
 		for (auto &proxy : register_proxies)
 		{
 			proxy.second->read = false;
 			proxy.second->written = false;
 		}
+#endif
 
 		while (1)
 		{

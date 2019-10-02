@@ -278,6 +278,8 @@ namespace casioemu
 			peripheral->Frame();
 	}
 
+	int instructions_executed_count;
+
 	void Chipset::Tick()
 	{
 		// * TODO: decrement delay counter, return if it's not 0
@@ -292,7 +294,10 @@ namespace casioemu
 			peripheral->TickAfterInterrupts();
 
 		if (run_mode == RM_RUN)
+		{
+			++instructions_executed_count;
 			cpu.Next();
+		}
 	}
 
 	void Chipset::UIEvent(SDL_Event &event)

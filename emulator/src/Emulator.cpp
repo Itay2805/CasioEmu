@@ -292,14 +292,19 @@ namespace casioemu
 		return model_path + "/" + relative_path;
 	}
 
+	extern int instructions_executed_count;
+
 	void Emulator::TimerCallback()
 	{
 		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
 
 		Uint64 cycles_to_emulate = cycles.GetDelta();
+		instructions_executed_count = 0;
 		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
 			if (!paused)
 				Tick();
+
+		logger::Info("%d / %d\n", instructions_executed_count, (int)cycles_to_emulate);
 
 		if (chipset.GetRequireFrame())
 		{

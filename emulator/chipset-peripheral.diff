@@ -1,0 +1,46 @@
+diff --git a/emulator/src/Chipset/Chipset.cpp b/emulator/src/Chipset/Chipset.cpp
+index c5936aa..fa90a11 100644
+--- a/emulator/src/Chipset/Chipset.cpp
++++ b/emulator/src/Chipset/Chipset.cpp
+@@ -62,13 +62,13 @@ namespace casioemu
+ 
+ 	void Chipset::ConstructPeripherals()
+ 	{
+-		peripherals.push_front(new ROMWindow(emulator));
+-		peripherals.push_front(new BatteryBackedRAM(emulator));
+-		peripherals.push_front(CreateScreen(emulator));
+-		peripherals.push_front(new Keyboard(emulator));
+-		peripherals.push_front(new StandbyControl(emulator));
+-		peripherals.push_front(new Miscellaneous(emulator));
+-		peripherals.push_front(new Timer(emulator));
++		peripherals.push_back(new ROMWindow(emulator));
++		peripherals.push_back(new BatteryBackedRAM(emulator));
++		peripherals.push_back(CreateScreen(emulator));
++		peripherals.push_back(new Keyboard(emulator));
++		peripherals.push_back(new StandbyControl(emulator));
++		peripherals.push_back(new Miscellaneous(emulator));
++		peripherals.push_back(new Timer(emulator));
+ 	}
+ 
+ 	void Chipset::DestructPeripherals()
+diff --git a/emulator/src/Chipset/Chipset.hpp b/emulator/src/Chipset/Chipset.hpp
+index 6b41111..fbf406c 100644
+--- a/emulator/src/Chipset/Chipset.hpp
++++ b/emulator/src/Chipset/Chipset.hpp
+@@ -5,7 +5,6 @@
+ 
+ #include <string>
+ #include <vector>
+-#include <forward_list>
+ #include <SDL.h>
+ 
+ namespace casioemu
+@@ -37,7 +36,7 @@ namespace casioemu
+ 		};
+ 		RunMode run_mode;
+ 
+-		std::forward_list<Peripheral *> peripherals;
++		std::vector<Peripheral *> peripherals;
+ 
+ 		/**
+ 		 * A bunch of internally used methods for encapsulation purposes.

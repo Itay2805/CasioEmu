@@ -12,6 +12,3 @@
 		std::fprintf(stderr, __VA_ARGS__), \
 		std::exit(1) \
 		)
-
-#define MODEL_DEF_NAME "model.def"
-

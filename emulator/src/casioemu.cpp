@@ -147,8 +147,10 @@ int main(int argc, char *argv[])
 		while (emulator.Running())
 		{
 			SDL_Event event;
+			logger::Info("Waiting event\n");
 			if (!SDL_WaitEvent(&event))
 				PANIC("SDL_WaitEvent failed: %s\n", SDL_GetError());
+			logger::Info("Got event\n");
 
 			switch (event.type)
 			{
@@ -169,6 +171,7 @@ int main(int argc, char *argv[])
 				switch (event.window.event)
 				{
 				case SDL_WINDOWEVENT_CLOSE:
+					logger::Info("SDL_WINDOWEVENT_CLOSE\n");
 					emulator.Shutdown();
 					break;
 				case SDL_WINDOWEVENT_RESIZED:
@@ -193,6 +196,8 @@ int main(int argc, char *argv[])
 				emulator.UIEvent(event);
 				break;
 			}
+
+			logger::Info("Done processing event\n");
 		}
 
 		running = false;

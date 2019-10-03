@@ -111,7 +111,10 @@ namespace casioemu
 				if (iteration_end > now)
 					std::this_thread::sleep_until(iteration_end);
 				else // in case the computer is not fast enough or paused
+				{
+					logger::Info("slow\n");
 					iteration_end = now;
+				}
 			}
 		});
 
@@ -390,7 +393,9 @@ namespace casioemu
 
 	void Emulator::Shutdown()
 	{
+		logger::Info("shutdown\n");
 		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+		logger::Info("locked\n");
 
 		running = false;
 	}

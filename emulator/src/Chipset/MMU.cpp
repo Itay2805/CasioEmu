@@ -175,6 +175,7 @@ namespace casioemu
 	{
 		if (offset >= (1 << 24))
 			PANIC("offset doesn't fit 24 bits\n");
+		offset &= 0xFFFFF;
 
 		size_t segment_index = offset >> 16;
 		size_t segment_offset = offset & 0xFFFF;
@@ -213,6 +214,7 @@ namespace casioemu
 	{
 		if (offset >= (1 << 24))
 			PANIC("offset doesn't fit 24 bits\n");
+		offset &= 0xFFFFF;
 
 		size_t segment_index = offset >> 16;
 		size_t segment_offset = offset & 0xFFFF;

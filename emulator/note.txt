@@ -1,0 +1,68 @@
+METHOD 1 == 
+
+method 2 is easier (not need to download separate dependencies) -- but
+requires (heavy?) git for windows SDK
+
+
+(use this branch)
+
+instruction ===
+* already have git bash (git bash sdk is not necessary) and python 3.8 installed
+* mingw-w64 (MingW-W64-builds)
+
+* dependencies: ===
+* Development libraries sdl mingw
+* set path environment variable
+* sdl_image 
+* lua (luabinaries mingw lib) MUST download correct win32/64 version
+
+dllw6 = mingw64
+NOT use 5.4.0 ONLY use 5.3.4
+
+* readline doesn't work...
+* === end dependencies
+
+* edit Makefile: ===
+* add '-I"C:\path\to\include\SDL2"' and similar with SDL_image Lua etc. to CCFLAGS ?= ...
+* run mingw32-make instead of make
+* if problem try
+
+rm dep/* bin/* obj/*
+
+* after build => to run: path must point to dll model
+
+PATH=$PATH:/d/Setup/SDL2-devel-2.0.12-mingw/SDL2-2.0.12/x86_64-w64-mingw32/bin:/d/Setup/SDL2_image-2.0.5/x86_64-w64-mingw32/bin:/d/Setup/lua-5.3.4_Win64_dllw6_lib bin/casioemu.exe ../models/fx570esplus/
+
+set path=%path%;D:\Setup\SDL2-devel-2.0.12-mingw\SDL2-2.0.12\x86_64-w64-mingw32\bin;D:\Setup\SDL2_image-2.0.5\x86_64-w64-mingw32\bin;D:\Setup\lua-5.3.4_Win64_dllw6_lib
+
+===================
+
+METHOD 2 ==
+
+(use tmp-meson branch)
+
+
+install git for windows SDK
+
+pacman -S mingw-w64-x86_64-lua  mingw-w64-x86_64-SDL2
+mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-readline
+mingw64/mingw-w64-x86_64-ninja mingw64/mingw-w64-x86_64-meson
+perhaps other version of ninja & meson are ok too
+edit meson.build -- "lua53" -> "lua5.3" (???)
+do as in readme
+
+
+NOTE: use winpty if run program in git bash shell
+
+OTHER FAILED METHODS ==
+
+====
+too slow
+install choco (chocolatey)
+
+===
+not have sdl!?
+install nuget
+
+===
+...

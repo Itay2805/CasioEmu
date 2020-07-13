@@ -18,13 +18,16 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <readline/readline.h>
-#include <readline/history.h>
+//#include <readline/readline.h>
+//#include <readline/history.h>
 
 using namespace casioemu;
 
+#undef main
 int main(int argc, char *argv[])
 {
+	std::cout<<1<<'\n';
+
 	std::map<std::string, std::string> argv_map;
 	for (int ix = 1; ix != argc; ++ix)
 	{
@@ -61,17 +64,6 @@ int main(int argc, char *argv[])
 	if (IMG_Init(imgFlags) != imgFlags)
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
-	std::string history_filename;
-	auto history_filename_iter = argv_map.find("history");
-	if (history_filename_iter != argv_map.end())
-		history_filename = history_filename_iter->second;
-
-	if (!history_filename.empty())
-	{
-		int err = read_history(history_filename.c_str());
-		if (err && err != ENOENT)
-			PANIC("error while reading history file: %s\n", std::strerror(err));
-	}
 
 	{
 		Emulator emulator(argv_map);
@@ -82,26 +74,14 @@ int main(int argc, char *argv[])
 
 		std::thread console_input_thread([&] {
 			struct terminate_thread {};
-			rl_event_hook = [](){
-				if (!running)
-					throw terminate_thread{};
-				return 0;
-			};
 
 			while (1)
 			{
-				char *console_input_c_str;
-				try
-				{
-					console_input_c_str = readline("> ");
-				}
-				catch (terminate_thread)
-				{
-					rl_cleanup_after_signal();
-					return;
-				}
+				std::string console_input;
+				std::cin>>console_input;
+				char const* console_input_c_str=console_input.data();
 
-				if (console_input_c_str == NULL)
+				if (!(std::cin))
 				{
 					if(argv_map.find("exit_on_console_shutdown") != argv_map.end())
 					{
@@ -124,13 +104,10 @@ int main(int argc, char *argv[])
 				if (console_input_c_str[0] == 0)
 					continue;
 
-				add_history(console_input_c_str);
-
 				std::lock_guard<std::recursive_mutex> access_lock(emulator.access_mx);
 				if (!emulator.Running())
 					break;
 				emulator.ExecuteCommand(console_input_c_str);
-				free(console_input_c_str);
 
 				if (!emulator.Running())
 				{
@@ -199,18 +176,9 @@ int main(int argc, char *argv[])
 		console_input_thread.join();
 	}
 
-	rl_free_line_state();
-	rl_deprep_terminal();
-
 	IMG_Quit();
 	SDL_Quit();
 
-	if (!history_filename.empty())
-	{
-		int err = write_history(history_filename.c_str());
-		if (err)
-			PANIC("error while writing history file: %s\n", std::strerror(err));
-	}
 
 	return 0;
 }

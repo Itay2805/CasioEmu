@@ -14,3 +14,6 @@ To compile it on Windows the following changes is required:
     * Because `pkg-config` is not available, just replace the `--cflags` calls
       by `-Ipath/to/include` and `--libs` calls by `-Lpath/to/lib -llibname`.
     * It's ok to define `RELBACK` as ``.
+
+
+read ^ & emulator/note.txt

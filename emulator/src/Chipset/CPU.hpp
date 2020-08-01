@@ -153,7 +153,8 @@ namespace casioemu
 			H_DS = 0x0008, // * Instruction is a DSR prefix.
 			H_IA = 0x0010, // * Increment EA flag for load/store/coprocessor instructions.
 			H_TI = 0x0020, // * Instruction takes an external long immediate value.
-			H_WB = 0x0040  // * Register Writeback flag for a lot of instructions to make life easier.
+			H_WB = 0x0040, // * Register Writeback flag for a lot of instructions to make life easier.
+			H_UD = 0x0080  // * Undocumented instruction support. (can be disassembled by DTU8)
 		};
 
 		struct OpcodeSource

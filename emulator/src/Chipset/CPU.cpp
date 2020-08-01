@@ -89,6 +89,7 @@ namespace casioemu
 		{&CPU::OP_CTRL       ,                    1 << 8, 0xA00F, {{0,      0,  0}, {1, 0x000F,  4}}},
 		{&CPU::OP_CTRL       ,                    2 << 8, 0xA00D, {{0,      0,  0}, {2, 0x000E,  8}}},
 		{&CPU::OP_CTRL       ,                    3 << 8, 0xA00C, {{0,      0,  0}, {1, 0x000F,  4}}},
+		{&CPU::OP_CTRL       , H_UD            |  3 << 8, 0xAF0C, {{0,      0,  0}, {1, 0x000F,  4}}},
 		{&CPU::OP_CTRL       , H_WB            |  4 << 8, 0xA005, {{2, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       , H_WB            |  5 << 8, 0xA01A, {{2, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       ,                    6 << 8, 0xA00B, {{0,      0,  0}, {1, 0x000F,  4}}},
@@ -96,6 +97,7 @@ namespace casioemu
 		{&CPU::OP_CTRL       , H_WB            |  8 << 8, 0xA007, {{1, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       , H_WB            |  9 << 8, 0xA004, {{1, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       , H_WB            | 10 << 8, 0xA003, {{1, 0x000F,  8}, {0,      0,  0}}},
+		{&CPU::OP_CTRL       , H_WB | H_UD     | 10 << 8, 0xA0A3, {{1, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       ,                   11 << 8, 0xA10A, {{0,      0,  0}, {2, 0x000E,  4}}},
 		// * PUSH/POP Instructions
 		{&CPU::OP_PUSH       ,                         0, 0xF05E, {{0,      0,  0}, {2, 0x000E,  8}}},
@@ -179,6 +181,7 @@ namespace casioemu
 		// * Branch Instructions
 		{&CPU::OP_B          ,        H_TI              , 0xF000, {{0,      0,  0}, {0, 0x000F,  8}}},
 		{&CPU::OP_B          ,                         0, 0xF002, {{0,      0,  0}, {2, 0x000E,  4}}},
+		{&CPU::OP_B          , H_UD                     , 0xFB02, {{0,      0,  0}, {2, 0x000E,  4}}},
 		{&CPU::OP_BL         ,        H_TI              , 0xF001, {{0,      0,  0}, {0, 0x000F,  8}}},
 		{&CPU::OP_BL         ,                         0, 0xF003, {{0,      0,  0}, {2, 0x000E,  4}}},
 		// * Multiplication and Division Instructions
@@ -388,8 +391,13 @@ namespace casioemu
 
 			if (!handler)
 			{
-				fprintf(stderr, "unrecognized instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
-				continue;
+				logger::Info("unrecognized instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
+				emulator.SetPaused(true);
+				break;
+			}
+			if (handler->hint & H_UD)
+			{
+				logger::Info("undocumented instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
 			}
 
 			impl_long_imm = 0;

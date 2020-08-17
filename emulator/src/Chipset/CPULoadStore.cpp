@@ -45,11 +45,11 @@ namespace casioemu
 	{
 		if (length % 2 == 0)
 			offset &= ~1;
-		size_t reg_base = impl_operands[0].value;
+		size_t reg_base = impl_hint & H_UD ? (impl_opcode >> 8) & 0xF : impl_operands[0].value;
 		if (impl_hint & H_ST)
 		{
 			for (size_t ix = length - 1; ix != (size_t)-1; --ix)
-				emulator.chipset.mmu.WriteData((((size_t)reg_dsr) << 16) | (uint16_t)(offset + ix), reg_r[reg_base + ix]);
+				emulator.chipset.mmu.WriteData((((size_t)reg_dsr) << 16) | (uint16_t)(offset + ix), reg_r[reg_base | ix]);
 		}
 		else
 		{
@@ -57,7 +57,7 @@ namespace casioemu
 			{
 				impl_operands[0].value = emulator.chipset.mmu.ReadData((((size_t)reg_dsr) << 16) | (uint16_t)(offset + ix));
 				ZSCheck(); // * defined in CPUArithmetic.cpp
-				reg_r[reg_base + ix] = impl_operands[0].value;
+				reg_r[reg_base | ix] = impl_operands[0].value;
 			}
 		}
 

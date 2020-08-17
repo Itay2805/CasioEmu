@@ -71,6 +71,7 @@ namespace casioemu
 		{&CPU::OP_LS_R       , 2 << 8 |             H_ST, 0x9003, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_I_R     , 2 << 8 |      H_TI | H_ST, 0xA009, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_BP      , 2 << 8 |             H_ST, 0xB080, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_BP      , 2 << 8 | H_UD |      H_ST, 0xB180, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_FP      , 2 << 8 |             H_ST, 0xB0C0, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 2 << 8 |      H_TI | H_ST, 0x9013, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |             H_ST, 0x9031, {{0, 0x000F,  8}, {0,      0,  0}}},
@@ -187,6 +188,7 @@ namespace casioemu
 		// * Multiplication and Division Instructions
 		{&CPU::OP_MUL        , H_WB                     , 0xF004, {{2, 0x000E,  8}, {1, 0x000F,  4}}},
 		{&CPU::OP_DIV        , H_WB                     , 0xF009, {{2, 0x000E,  8}, {1, 0x000F,  4}}},
+		{&CPU::OP_DIV        , H_WB | H_UD              , 0xF109, {{2, 0x000E,  8}, {1, 0x000F,  4}}},
 		// * Miscellaneous Instructions
 		{&CPU::OP_INC_EA     ,                         0, 0xFE2F, {{0,      0,  0}, {0,      0,  0}}},
 		{&CPU::OP_DEC_EA     ,                         0, 0xFE3F, {{0,      0,  0}, {0,      0,  0}}},

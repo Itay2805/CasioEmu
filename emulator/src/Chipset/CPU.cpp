@@ -265,6 +265,8 @@ namespace casioemu
 			for (size_t ox = 0; ox != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ox)
 				varying_bits |= handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
 
+			if (handler_stub.opcode & varying_bits)
+				PANIC("opcode %04X overlaps with varying bits\n", handler_stub.opcode);
 			size_t permutation_count = 1;
 			permutation_buffer[0] = handler_stub.opcode;
 			for (uint16_t checkbit = 0x8000; checkbit; checkbit >>= 1)

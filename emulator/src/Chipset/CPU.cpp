@@ -8,10 +8,13 @@
 #include <sstream>
 #include <iomanip>
 
+#define H_UD 0
 namespace casioemu
 {
 	CPU::OpcodeSource CPU::opcode_sources[] = {
-		//           function,                     hints, main mask, operand {size, mask, shift} x2
+		// Third operand must be undocumented instruction mask, if present.
+		// (if the operand value is nonzero, the instruction is undocumented)
+		//           function,                     hints, main mask, operand {size, mask, shift} x3
 		// * Arithmetic Instructions
 		{&CPU::OP_ADD        , H_WB                     , 0x8001, {{1, 0x000F,  8}, {1, 0x000F,  4}}},
 		{&CPU::OP_ADD        , H_WB                     , 0x1000, {{1, 0x000F,  8}, {0, 0x00FF,  0}}},
@@ -70,8 +73,7 @@ namespace casioemu
 		{&CPU::OP_LS_EA      , 2 << 8 |      H_IA | H_ST, 0x9053, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_R       , 2 << 8 |             H_ST, 0x9003, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_I_R     , 2 << 8 |      H_TI | H_ST, 0xA009, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
-		{&CPU::OP_LS_BP      , 2 << 8 |             H_ST, 0xB080, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
-		{&CPU::OP_LS_BP      , 2 << 8 | H_UD |      H_ST, 0xB180, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_BP      , 2 << 8 |             H_ST, 0xB080, {{0, 0x000F,  8}, {0, 0x003F,  0}, {0, 0x0001, 8}}},
 		{&CPU::OP_LS_FP      , 2 << 8 |             H_ST, 0xB0C0, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 2 << 8 |      H_TI | H_ST, 0x9013, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |             H_ST, 0x9031, {{0, 0x000F,  8}, {0,      0,  0}}},
@@ -89,16 +91,14 @@ namespace casioemu
 		{&CPU::OP_ADDSP      ,                         0, 0xE100, {{0, 0x00FF,  0}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       ,                    1 << 8, 0xA00F, {{0,      0,  0}, {1, 0x000F,  4}}},
 		{&CPU::OP_CTRL       ,                    2 << 8, 0xA00D, {{0,      0,  0}, {2, 0x000E,  8}}},
-		{&CPU::OP_CTRL       ,                    3 << 8, 0xA00C, {{0,      0,  0}, {1, 0x000F,  4}}},
-		{&CPU::OP_CTRL       , H_UD            |  3 << 8, 0xAF0C, {{0,      0,  0}, {1, 0x000F,  4}}},
+		{&CPU::OP_CTRL       ,                    3 << 8, 0xA00C, {{0,      0,  0}, {1, 0x000F,  4}, {0, 0x000F, 8}}},
 		{&CPU::OP_CTRL       , H_WB            |  4 << 8, 0xA005, {{2, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       , H_WB            |  5 << 8, 0xA01A, {{2, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       ,                    6 << 8, 0xA00B, {{0,      0,  0}, {1, 0x000F,  4}}},
 		{&CPU::OP_CTRL       ,                    7 << 8, 0xE900, {{0,      0,  0}, {0, 0x00FF,  0}}},
 		{&CPU::OP_CTRL       , H_WB            |  8 << 8, 0xA007, {{1, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       , H_WB            |  9 << 8, 0xA004, {{1, 0x000F,  8}, {0,      0,  0}}},
-		{&CPU::OP_CTRL       , H_WB            | 10 << 8, 0xA003, {{1, 0x000F,  8}, {0,      0,  0}}},
-		{&CPU::OP_CTRL       , H_WB | H_UD     | 10 << 8, 0xA0A3, {{1, 0x000F,  8}, {0,      0,  0}}},
+		{&CPU::OP_CTRL       , H_WB            | 10 << 8, 0xA003, {{1, 0x000F,  8}, {0,      0,  0}, {0, 0x000A, 4}}},
 		{&CPU::OP_CTRL       ,                   11 << 8, 0xA10A, {{0,      0,  0}, {2, 0x000E,  4}}},
 		// * PUSH/POP Instructions
 		{&CPU::OP_PUSH       ,                         0, 0xF05E, {{0,      0,  0}, {2, 0x000E,  8}}},
@@ -263,7 +263,15 @@ namespace casioemu
 
 			uint16_t varying_bits = 0;
 			for (size_t ox = 0; ox != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ox)
-				varying_bits |= handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
+			{
+				uint16_t const added_varying_bits = handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
+				// allowing overlapping operand bit for the third (undocumented instruction) operand
+				if (ox != 2 && (varying_bits & added_varying_bits) != 0)
+				{
+					PANIC("opcode %04X has overlapping varying bits\n", handler_stub.opcode);
+				}
+				varying_bits |= added_varying_bits;
+			}
 
 			if (handler_stub.opcode & varying_bits)
 				PANIC("opcode %04X overlaps with varying bits\n", handler_stub.opcode);
@@ -399,10 +407,6 @@ namespace casioemu
 				emulator.SetPaused(true);
 				break;
 			}
-			if (handler->hint & H_UD)
-			{
-				logger::Info("undocumented instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
-			}
 
 			impl_long_imm = 0;
 			if (handler->hint & H_TI)
@@ -421,6 +425,7 @@ namespace casioemu
 						impl_operands[ix].value |= (uint64_t)(reg_r[impl_operands[ix].register_index + bx]) << (bx * 8);
 				}
 			}
+			impl_undocumented = impl_operands[2].value != 0;
 			impl_hint = handler->hint;
 
 			impl_flags_changed = 0;
@@ -439,6 +444,11 @@ namespace casioemu
 			if (handler->hint & H_WB && impl_operands[0].register_size)
 				for (size_t bx = 0; bx != impl_operands[0].register_size; ++bx)
 					reg_r[impl_operands[0].register_index + bx] = (uint8_t)(impl_operands[0].value >> (bx * 8));
+
+			if (impl_undocumented)
+			{
+				logger::Info("undocumented instruction %04X at %06zX\n", impl_opcode, (((size_t)reg_csr.raw) << 16) | (reg_pc.raw - 2));
+			}
 
 			if (!(handler->hint & H_DS))
 				break;

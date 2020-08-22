@@ -14,6 +14,12 @@ namespace casioemu
 	CPU::OpcodeSource CPU::opcode_sources[] = {
 		// Third operand must be undocumented instruction mask, if present.
 		// (if the operand value is nonzero, the instruction is undocumented)
+		// The mask of the first and second operands must not overlap each other, but they may
+		// overlap the undefined instruction mask.
+		// If the opcode of an undocumented instruction clashes with one of a documented instruction,
+		// the documented instruction overlap.
+		// Currently there's no check if the opcode of two undocumented instructions clash.
+
 		//           function,                     hints, main mask, operand {size, mask, shift} x3
 		// * Arithmetic Instructions
 		{&CPU::OP_ADD        , H_WB                     , 0x8001, {{1, 0x000F,  8}, {1, 0x000F,  4}}},
@@ -256,45 +262,53 @@ namespace casioemu
 
 	void CPU::SetupOpcodeDispatch()
 	{
-		uint16_t *permutation_buffer = new uint16_t[0x10000];
-		for (size_t ix = 0; ix != sizeof(opcode_sources) / sizeof(opcode_sources[0]); ++ix)
+		static_assert(sizeof(impl_operands) / sizeof(impl_operands[0]) == 3, "");
+		// if the size of the impl_operands is changed, the code below should be changed correspondingly
+		for (bool undocumented : {false, true})
 		{
-			OpcodeSource &handler_stub = opcode_sources[ix];
-
-			uint16_t varying_bits = 0;
-			for (size_t ox = 0; ox != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ox)
+			for (OpcodeSource &handler_stub : opcode_sources)
 			{
-				uint16_t const added_varying_bits = handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
-				// allowing overlapping operand bit for the third (undocumented instruction) operand
-				if (ox != 2 && (varying_bits & added_varying_bits) != 0)
+				uint16_t varying_bits = 0;
+				for (size_t ox = 0; ox != 3; ++ox)
 				{
-					PANIC("opcode %04X has overlapping varying bits\n", handler_stub.opcode);
+					uint16_t const current_varying_bits = handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
+					if (ox == 2)
+					{
+						if (!undocumented)
+						{
+							varying_bits &= ~current_varying_bits;
+							break;
+						}
+					}
+					else if ((varying_bits & current_varying_bits) != 0)
+					{
+						PANIC("opcode %04X has overlapping varying bits\n", handler_stub.opcode);
+					}
+					varying_bits |= current_varying_bits;
 				}
-				varying_bits |= added_varying_bits;
-			}
 
-			if (handler_stub.opcode & varying_bits)
-				PANIC("opcode %04X overlaps with varying bits\n", handler_stub.opcode);
-			size_t permutation_count = 1;
-			permutation_buffer[0] = handler_stub.opcode;
-			for (uint16_t checkbit = 0x8000; checkbit; checkbit >>= 1)
-			{
-				if (varying_bits & checkbit)
+				if (handler_stub.opcode & varying_bits)
+					PANIC("opcode %04X overlaps with varying bits\n", handler_stub.opcode);
+
+				for (uint16_t varying_value = varying_bits;;)
 				{
-					for (size_t px = 0; px != permutation_count; ++px)
-						permutation_buffer[px + permutation_count] = permutation_buffer[px] | checkbit;
-					permutation_count <<= 1;
-				}
-			}
+					uint16_t const opcode = handler_stub.opcode | varying_value;
+					if (opcode_dispatch[opcode])
+					{
+						if (not undocumented)
+							PANIC("clashing opcode %04X\n", opcode);
+					}
+					else
+					{
+						opcode_dispatch[opcode] = &handler_stub;
+					}
 
-			for (size_t px = 0; px != permutation_count; ++px)
-			{
-				if (opcode_dispatch[permutation_buffer[px]])
-					PANIC("clashing opcode %04X\n", permutation_buffer[px]);
-				opcode_dispatch[permutation_buffer[px]] = &handler_stub;
+					if (varying_value == 0)
+						break;
+					varying_value = (varying_value - 1) & varying_bits;
+				}
 			}
 		}
-		delete[] permutation_buffer;
 	}
 
 	void CPU::SetupRegisterProxies()

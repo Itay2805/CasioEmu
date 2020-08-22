@@ -422,7 +422,7 @@ namespace casioemu
 				{
 					impl_operands[ix].value = 0;
 					for (size_t bx = 0; bx != impl_operands[ix].register_size; ++bx)
-						impl_operands[ix].value |= (uint64_t)(reg_r[impl_operands[ix].register_index + bx]) << (bx * 8);
+						impl_operands[ix].value |= (uint64_t)(reg_r[impl_operands[ix].register_index | bx]) << (bx * 8);
 				}
 			}
 			impl_undocumented = impl_operands[2].value != 0;
@@ -443,7 +443,7 @@ namespace casioemu
 
 			if (handler->hint & H_WB && impl_operands[0].register_size)
 				for (size_t bx = 0; bx != impl_operands[0].register_size; ++bx)
-					reg_r[impl_operands[0].register_index + bx] = (uint8_t)(impl_operands[0].value >> (bx * 8));
+					reg_r[impl_operands[0].register_index | bx] = (uint8_t)(impl_operands[0].value >> (bx * 8));
 
 			if (impl_undocumented)
 			{

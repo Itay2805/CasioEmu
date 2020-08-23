@@ -84,8 +84,8 @@ namespace casioemu
 		{&CPU::OP_LS_I       , 2 << 8 |      H_TI | H_ST, 0x9013, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |             H_ST, 0x9031, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |      H_IA | H_ST, 0x9051, {{0, 0x000F,  8}, {0,      0,  0}}},
-		{&CPU::OP_LS_R       , 1 << 8 |             H_ST, 0x9001, {{0, 0x000F,  8}, {2, 0x000F,  4}, {0, 0x0001, 4}}},
-		{&CPU::OP_LS_I_R     , 1 << 8 |      H_TI | H_ST, 0x9009, {{0, 0x000F,  8}, {2, 0x000E,  4}}},
+		{&CPU::OP_LS_R       , 1 << 8 |             H_ST, 0x9001, {{0, 0x000F,  8}, {2, 0x000E,  4}}},
+		{&CPU::OP_LS_I_R     , 1 << 8 |      H_TI | H_ST, 0x9009, {{0, 0x000F,  8}, {2, 0x000F,  4}, {0, 0x0001, 4}}},
 		{&CPU::OP_LS_BP      , 1 << 8 |             H_ST, 0xD080, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_FP      , 1 << 8 |             H_ST, 0xD0C0, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 1 << 8 |      H_TI | H_ST, 0x9011, {{0, 0x000F,  8}, {0,      0,  0}}},
@@ -264,7 +264,7 @@ namespace casioemu
 	{
 		static_assert(sizeof(impl_operands) / sizeof(impl_operands[0]) == 3, "");
 		// if the size of the impl_operands is changed, the code below should be changed correspondingly
-		for (bool undocumented : {false, true})
+		for (bool documented : {true, false})
 		{
 			for (OpcodeSource &handler_stub : opcode_sources)
 			{
@@ -274,7 +274,7 @@ namespace casioemu
 					uint16_t const current_varying_bits = handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
 					if (ox == 2)
 					{
-						if (!undocumented)
+						if (documented)
 						{
 							varying_bits &= ~current_varying_bits;
 							break;
@@ -295,7 +295,7 @@ namespace casioemu
 					uint16_t const opcode = handler_stub.opcode | varying_value;
 					if (opcode_dispatch[opcode])
 					{
-						if (not undocumented)
+						if (documented)
 							PANIC("clashing opcode %04X\n", opcode);
 					}
 					else
